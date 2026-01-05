@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+websockets
+passlib[bcrypt,argon2]
+python-jose[cryptography]
+python-multipart
+aiofiles
+sqlalchemy
+geopybash
