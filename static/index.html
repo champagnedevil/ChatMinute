@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatMinute App</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ChatMinute</h1>
+            <div class="user-info" id="userInfo">
+                <span id="userName"></span>
+                <button onclick="logout()">Выйти</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Экран входа -->
+            <div id="loginScreen" class="screen">
+                <div class="auth-form">
+                    <h2>Вход в систему</h2>
+                    <div class="form-group">
+                        <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="loginPassword" placeholder="Пароль" required>
+                    </div>
+                    <button onclick="login()" class="auth-btn">Войти</button>
+                    <div class="auth-switch">
+                        Нет аккаунта? <a onclick="showRegisterScreen()">Зарегистрироваться</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Экран регистрации -->
+            <div id="registerScreen" class="screen hidden">
+                <div class="auth-form">
+                    <h2>Регистрация</h2>
+                    <div class="form-group">
+                        <input type="text" id="registerUsername" placeholder="Имя пользователя" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="registerEmail" placeholder="Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="registerPassword" placeholder="Пароль" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="registerConfirmPassword" placeholder="Подтвердите пароль" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="registerFirstName" placeholder="Имя" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="registerLastName" placeholder="Фамилия" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" id="registerAge" placeholder="Возраст" min="18" max="100" required>
+                    </div>
+                    <div class="form-group">
+                        <select id="registerGender" required>
+                            <option value="">Выберите пол</option>
+                            <option value="male">Мужской</option>
+                            <option value="female">Женский</option>
+                            <option value="other">Другой</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="registerBio" placeholder="Расскажите о себе..." rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Местоположение:</label>
+                        <div class="location-inputs">
+                            <input type="number" id="registerLat" step="any" placeholder="Широта" value="55.7558">
+                            <input type="number" id="registerLng" step="any" placeholder="Долгота" value="37.6173">
+                        </div>
+                        <small>Или используйте текущее местоположение:</small>
+                        <button type="button" onclick="getCurrentLocation()" class="location-btn">
+                            📍 Получить мое местоположение
+                        </button>
+                    </div>
+                    <button onclick="register()" class="auth-btn">Зарегистрироваться</button>
+                    <div class="auth-switch">
+                        Уже есть аккаунт? <a onclick="showLoginScreen()">Войти</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Главный экран -->
+            <div id="mainScreen" class="screen hidden">
+                <div class="profile-section">
+                    <h3>Ваш профиль</h3>
+                    <div id="profileInfo"></div>
+                </div>
+
+                <div class="stats-section">
+                    <h4>Статистика</h4>
+                    <div id="statsInfo"></div>
+                </div>
+
+                <div class="controls">
+                    <button id="startSearchBtn" onclick="startSearch()" class="search-btn">🔍 Начать поиск собеседника</button>
+                    <button id="stopSearchBtn" onclick="stopSearch()" class="stop-btn hidden">⏹️ Остановить поиск</button>
+                </div>
+
+                <div id="status" class="status"></div>
+
+                                    <!-- Видео чат -->
+                    <!-- В блоке video-chat добавьте/обновите: -->
+                    <div id="videoChat" class="video-chat hidden">
+                        <div class="video-container">
+                            <!-- Блок отладочной информации -->
+                            <div id="debugInfo" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #00ff00; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 1000; font-family: 'Courier New', monospace; border: 1px solid #00ff00;">
+                                <div><strong>WebRTC Debug:</strong></div>
+                                <div>Connection: <span id="connState">-</span></div>
+                                <div>ICE: <span id="iceState">-</span></div>
+                                <div>Signaling: <span id="sigState">-</span></div>
+                                <div>Candidates: <span id="iceCandidates">0</span></div>
+                                <div>TURN used: <span id="turnUsed" style="color: #f44336;">нет</span></div>
+                                <button onclick="window.testTURN && window.testTURN()" style="margin-top: 5px; background: #ff9800; color: black; border: none; padding: 5px; border-radius: 3px; font-size: 10px; width: 100%;">Test TURN</button>
+                            </div>
+                            
+                            <!-- Основное видео собеседника -->
+                            <div class="remote-video-wrapper">
+                                <video id="remoteVideo" 
+                                    autoplay 
+                                    playsinline 
+                                    webkit-playsinline
+                                    style="width: 100%; height: 100%; object-fit: cover; background: #000; transform: scaleX(-1);">
+                                </video>
+                                <div class="video-label remote-video-label" id="partnerName">Собеседник</div>
+                            </div>
+                            
+                            <!-- Маленькое локальное видео -->
+                            <div class="local-video-wrapper">
+                                <video id="localVideo" 
+                                    autoplay 
+                                    muted 
+                                    playsinline 
+                                    webkit-playsinline
+                                    style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);">
+                                </video>
+                                <div class="video-label local-video-label">Вы</div>
+                            </div>
+                            
+                            <!-- Информация о собеседнике -->
+                            <div class="partner-info">
+                                <div class="partner-name" id="partnerFullName">Загрузка...</div>
+                                <div class="partner-age" id="partnerAge"></div>
+                            </div>
+                            
+                            <!-- Элементы управления поверх видео -->
+                            <div class="chat-controls-overlay">
+                                <div class="timer-section">
+                                    <div class="timer" id="timer">01:00</div>
+                                    <div class="timer-label" id="timerLabel">до принятия решения</div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button id="rejectBtn" onclick="rejectMatch()" class="reject" title="Не нравится">👎</button>
+                                    <button id="approveBtn" onclick="approveMatch()" class="approve" title="Нравится">👍</button>
+                                    <button id="endChatBtn" onclick="endConversation()" class="end-chat hidden" title="Завершить разговор">📞</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+    <!-- Модальное окно редактирования профиля -->
+    <div id="editProfileModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Редактировать профиль</h3>
+                <button onclick="hideEditProfileModal()" class="modal-close">×</button>
+            </div>
+            <div class="form-group">
+                <input type="text" id="editFirstName" placeholder="Имя" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="editLastName" placeholder="Фамилия" required>
+            </div>
+            <div class="form-group">
+                <input type="number" id="editAge" placeholder="Возраст" min="18" max="100" required>
+            </div>
+            <div class="form-group">
+                <select id="editGender" required>
+                    <option value="">Выберите пол</option>
+                    <option value="male">Мужской</option>
+                    <option value="female">Женский</option>
+                    <option value="other">Другой</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <textarea id="editBio" placeholder="Расскажите о себе..." rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <textarea id="editInterests" placeholder="Ваши интересы..." rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Местоположение:</label>
+                <div class="location-inputs">
+                    <input type="number" id="editLat" step="any" placeholder="Широта" value="55.7558">
+                    <input type="number" id="editLng" step="any" placeholder="Долгота" value="37.6173">
+                </div>
+                <button type="button" onclick="getCurrentLocation()" class="location-btn">
+                    📍 Получить мое местоположение
+                </button>
+            </div>
+            <div class="modal-actions">
+                <button onclick="updateProfile()" class="save-btn">Сохранить</button>
+                <button onclick="hideEditProfileModal()" class="cancel-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
